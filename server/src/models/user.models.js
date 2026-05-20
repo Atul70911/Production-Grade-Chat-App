@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
     {
@@ -48,7 +49,8 @@ const userSchema = new mongoose.Schema(
         }],
         refreshToken: {
             type: String,
-            default: null
+            default: null,
+            select:false,
         }
     }, {
     timestamps: true
@@ -56,11 +58,11 @@ const userSchema = new mongoose.Schema(
 )
 
 // Hash password before save
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next()
-  this.password = await bcrypt.hash(this.password, 12)
-  next()
-})
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return;
+
+    this.password = await bcrypt.hash(this.password, 10);
+});
 
 // Compare password
 userSchema.methods.isPasswordCorrect = async function (password) {
