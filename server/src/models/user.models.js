@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-
 const userSchema = new mongoose.Schema(
     {
         name: {
@@ -22,7 +21,6 @@ const userSchema = new mongoose.Schema(
             required: true,
             minlength: 6,
             select: false,
-
         },
         profilePic: {
             type: String,
@@ -32,6 +30,51 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: ""
         },
+
+       
+        userId: {
+            type: String,
+            unique: true,
+            trim: true,
+            lowercase: true
+            
+        },
+
+    
+        friends: [{
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            },
+            addedAt: {
+                type: Date,
+                default: Date.now
+            }
+        }],
+
+        friendRequests: {
+            sent: [{
+                user: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User'
+                },
+                sentAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }],
+            received: [{
+                user: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User'
+                },
+                receivedAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }]
+        },
+
         status: {
             type: String,
             enum: ["online", "offline"],
@@ -52,7 +95,7 @@ const userSchema = new mongoose.Schema(
         refreshToken: {
             type: String,
             default: null,
-            select:false,
+            select: false,
         }
     }, {
     timestamps: true
@@ -64,6 +107,12 @@ userSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
 
     this.password = await bcrypt.hash(this.password, 10);
+
+    if(!this.userId){
+        const tag=Math.floor(1000+Math.random()*9000);
+        const base = this.name.toLowerCase().replace(/\s+/g, "")
+        this.userId=`${base}@${tag}`;
+    }
 });
 
 // Compare password

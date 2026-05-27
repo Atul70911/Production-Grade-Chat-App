@@ -9,7 +9,8 @@ const conversationSchema = new mongoose.Schema({
 
   name: {
     type: String,
-    trim: true           
+    trim: true,
+    maxlength:50           
   },
   groupAvatar: {
     type: String,        
@@ -67,3 +68,14 @@ const conversationSchema = new mongoose.Schema({
 conversationSchema.index({ 'members.user': 1 })
 
 export const Conversation = mongoose.model('Conversation', conversationSchema)
+
+
+conversationSchema.pre("save",function(next){
+  if(this.type==="direct" && this.members.length>2){
+    throw new Error("Direct message can only have 2 members");
+  }
+  if(this.type==="group" && this.members.length<2){
+    throw new Error("Group message must have atleast 2 members");
+    
+  }
+})
