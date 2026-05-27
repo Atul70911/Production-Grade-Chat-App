@@ -2,6 +2,7 @@ import { Server, Socket } from "socket.io"
 import { Message } from "../models/message.models.js"
 import { Conversation } from "../models/conversation.models.js"
 import { Notification } from "../models/notification.models.js"
+import redisClient from "../utils/redis.js"
 
 const onlineUsers = new Map();
 
@@ -17,10 +18,11 @@ const initSocket = (server) => {
     io.on("connection", (socket) => {
         console.log("User Connected", socket.id);
 
-        socket.on("UserOnline", (userId) => {
+        socket.on("userOnline", async (userId) => {
             onlineUsers.set(userId, socket.id);
             socket.userId = userId;
-            io.emit("OnlineUsers:", Array.from(onlineUsers.keys()));
+            await redisClient.sAdd("onlineUsers", userId)
+            io.emit("onlineUsers:", Array.from(onlineUsers.keys()))
             console.log(`${userId} is online`)
         });
         socket.on("joinConversation", (conversationId) => {
@@ -137,8 +139,9 @@ const initSocket = (server) => {
                 socket.emit("error", "Failed to mark notification")
             }
         });
-        socket.on("disconnect", () => {
+        socket.on("disconnect",async () => {
             onlineUsers.delete(socket.userId)
+            await redisClient.sRem("onlineUsers", socket.userId)
             io.emit("onlineUsers", Array.from(onlineUsers.keys()))
             console.log("User disconnected:", socket.id)
         });

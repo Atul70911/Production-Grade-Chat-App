@@ -1,11 +1,12 @@
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
 import { Message } from "../models/message.models.js";
 import { Conversation } from "../models/conversation.models.js";
 import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import redisClient from "../utils/redis.js"
+
 
 const sendMessage = asyncHandler(async (req, res) => {
     const { conversationId, content, type } = req.body;
